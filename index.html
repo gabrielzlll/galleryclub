@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gallery Night Club · Cardápio</title>
+<meta name="theme-color" content="#04060f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Pinyon+Script&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="frames/logo_001.webp">
+<style>
+:root{--ink:#04060f;--gold:#e3b762;--gold2:#f6dca0;--goldd:#b98a3c;--neon:#3d86ff;--neon2:#9cc2ff;--txt:#f1ece0;--mut:#a9b3d6;--line:rgba(227,183,98,.22)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#000;color:var(--txt);font-family:'Jost',system-ui,sans-serif;font-weight:300;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--neon2);outline-offset:3px}
+
+/* ---------- VÍDEO FIXO NO FUNDO (loop infinito) ---------- */
+.stage{position:fixed;inset:0;z-index:0;overflow:hidden;background:#04060f}
+.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.stage::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(3,6,20,.66),rgba(3,6,20,.5) 45%,rgba(3,6,20,.76))}
+.stage::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(55% 35% at 50% 0%,rgba(227,183,98,.16),transparent 70%),radial-gradient(70% 45% at 50% 100%,rgba(61,134,255,.2),transparent 70%)}
+#bar{position:fixed;left:0;top:0;height:2px;width:0;background:linear-gradient(90deg,var(--gold),var(--neon));box-shadow:0 0 10px var(--neon);z-index:60}
+#novideo{position:fixed;inset:auto 20px 20px;z-index:70;display:none;text-align:center;color:var(--mut);font-size:13px;background:rgba(4,6,15,.92);padding:10px;border-radius:12px}
+
+/* ---------- INTRO: LOGO GIRANDO + "DESLIZE" ---------- */
+/* 170vh = o cardápio entra logo quando a intro acaba de desaparecer (ver SPACER no JS) */
+#spacer{height:100vh;position:relative;z-index:1}
+#intro{position:fixed;inset:0;z-index:50;cursor:pointer;will-change:opacity;background:radial-gradient(60% 50% at 50% 46%,rgba(40,90,220,.22),rgba(10,20,70,.12) 45%,#000 80%),#000}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;mix-blend-mode:screen;
+  -webkit-mask-image:radial-gradient(ellipse closest-side,#000 80%,transparent 100%);
+          mask-image:radial-gradient(ellipse closest-side,#000 80%,transparent 100%)}
+#hint{position:absolute;left:0;right:0;bottom:max(30px,env(safe-area-inset-bottom));text-align:center;font-family:'Pinyon Script',cursive;font-size:34px;line-height:1;color:var(--gold2);text-shadow:0 0 18px rgba(227,183,98,.55);pointer-events:none}
+#hint i{display:block;width:12px;height:12px;margin:14px auto 0;border-right:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);transform:rotate(45deg);animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateY(-4px) rotate(45deg);opacity:.35}50%{transform:translateY(6px) rotate(45deg);opacity:1}}
+#skip{position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;background:rgba(4,6,15,.55);border:1px solid var(--line);color:var(--gold2);padding:9px 18px;border-radius:999px;font:inherit;font-size:14px;font-weight:400;letter-spacing:.04em;cursor:pointer;transition:border-color .25s,background .25s}
+#skip:hover{border-color:var(--gold);background:rgba(4,6,15,.8)}
+
+/* ---------- CARDÁPIO ---------- */
+#menu{position:relative;z-index:2;background:transparent}
+.bar2{position:sticky;top:0;z-index:30;background:rgba(4,6,15,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top);box-shadow:0 -30px 60px 10px rgba(4,6,15,.0),0 10px 40px rgba(0,0,0,.35);opacity:var(--b,1);transform:translateY(calc((1 - var(--b,1)) * -18px))}
+.bar2 .in{max-width:1000px;margin:0 auto;padding:10px 16px}
+.top{display:flex;align-items:center;gap:12px}
+.mark{flex:none;width:50px;height:50px;border-radius:50%;object-fit:cover;mix-blend-mode:screen}
+#q{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:999px;padding:12px 20px;color:var(--txt);font:inherit;font-size:16px;outline:none;transition:border-color .25s,box-shadow .25s}
+#q:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(61,134,255,.18)}
+#q::placeholder{color:var(--mut)}
+#chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+#chips::-webkit-scrollbar{display:none}
+#chips a{flex:none;color:#cdd3ee;text-decoration:none;font-size:15px;font-weight:400;padding:6px 14px;border:1px solid transparent;border-radius:999px;transition:color .25s,border-color .25s;white-space:nowrap}
+#chips a:hover{color:var(--gold2);border-color:var(--line)}
+#chips a.on{background:var(--gold);color:#1a1204;font-weight:500;box-shadow:0 0 18px rgba(227,183,98,.35)}
+.wrap{max-width:900px;margin:0 auto;padding:56px 16px 80px}
+.sec{scroll-margin-top:120px;margin-bottom:84px}
+.sec>h2,.cat h3,footer .script{font-family:'Pinyon Script',cursive;font-weight:400;background:linear-gradient(180deg,var(--gold2),var(--gold) 55%,var(--goldd));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.sec>h2{font-size:clamp(60px,13vw,104px);line-height:1.05;text-align:center;margin-bottom:4px;filter:drop-shadow(0 3px 18px rgba(0,0,0,.6))}
+.sec>h2::after{content:'';display:block;width:min(280px,60%);height:2px;margin:12px auto 34px;background:linear-gradient(90deg,transparent,var(--neon),transparent);box-shadow:0 0 14px 1px var(--neon);border-radius:2px}
+.cat{margin-bottom:30px;background:rgba(4,7,22,.66);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--line);border-top:2px solid var(--gold);border-radius:6px 6px 18px 18px;padding:26px 32px 14px;box-shadow:0 18px 50px rgba(0,0,0,.45);opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+.cat.in{opacity:1;transform:none}
+.cat h3{font-size:clamp(40px,7vw,54px);line-height:1.1;margin-bottom:8px}
+.cols,.cat li{display:grid;grid-template-columns:1fr repeat(var(--n,1),minmax(96px,auto));gap:0 12px;align-items:baseline}
+.cols{margin:4px 0 4px;font-size:13px;color:var(--neon2);text-align:right;letter-spacing:.04em}
+.cat ul{list-style:none}
+.cat li{padding:14px 0;border-top:1px solid rgba(255,255,255,.06);font-size:clamp(17px,2.4vw,21px);font-weight:300;letter-spacing:.01em}
+.cat li:first-child{border-top:0}
+.cat li>span:first-child{display:flex;align-items:baseline;gap:10px}
+.cat li>span:first-child::after{content:'';flex:1;min-width:14px;border-bottom:1px dotted rgba(227,183,98,.35);transform:translateY(-4px)}
+.cat li .p{text-align:right;color:var(--gold2);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cat li .p.na{color:rgba(255,255,255,.2);font-weight:300}
+.empty{display:none;text-align:center;color:var(--neon2);padding:40px 0}
+footer{position:relative;z-index:2;background:rgba(2,4,12,.85);border-top:1px solid var(--line);padding:48px 20px 64px;text-align:center;color:#aeb7dc;font-size:14px;font-weight:300;line-height:1.75}
+footer>*{max-width:720px;margin-left:auto;margin-right:auto}
+footer .script{font-size:52px;display:block;margin-bottom:10px}
+footer p+p{margin-top:12px}
+@media (max-width:520px){.wrap{padding-top:40px}.cat{padding:20px 16px 8px}.cat li{padding:13px 0}.cols,.cat li{gap:0 8px;grid-template-columns:1fr repeat(var(--n,1),minmax(66px,auto))}.mark{width:44px;height:44px}}
+@media (prefers-reduced-motion:reduce){.cat{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}#hint i{animation:none}}
+</style>
+</head>
+<body>
+
+<!-- ======= VÍDEO NO FUNDO: loop infinito, sem som (gallery.mp4 · 43 s) ======= -->
+<div class="stage"><video id="vid" src="gallery.mp4" poster="frames/logo_001.webp" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video></div>
+<div id="bar"></div>
+<div id="novideo">Coloque o seu vídeo na mesma pasta deste ficheiro com o nome <b>gallery.mp4</b></div>
+
+<!-- ======= INTRO: logo girando (sequência de frames) + Deslize ======= -->
+<section id="intro" aria-label="Deslize para abrir o cardápio">
+  <canvas id="cv" role="img" aria-label="Gallery Night Club"></canvas>
+  <button id="skip" type="button" aria-label="Saltar intro e ver o cardápio">Saltar</button>
+  <div id="hint">Deslize<i></i></div>
+</section>
+
+<!-- espaço de rolagem da animação -->
+<div id="spacer" aria-hidden="true"></div>
+
+<!-- ======= CARDÁPIO ======= -->
+<main id="menu">
+  <div class="bar2"><div class="in">
+    <div class="top"><img class="mark" src="frames/logo_001.webp" alt="Gallery Night Club"><input id="q" type="search" placeholder="Pesquisar no cardápio (ex.: gin, Porto, bacalhau)" autocomplete="off"></div>
+    <nav id="chips"></nav>
+  </div></div>
+  <div class="wrap">
+    <div id="root"></div>
+    <div class="empty" id="empty">Nada encontrado para essa pesquisa.</div>
+  </div>
+</main>
+
+<footer>
+  <span class="script">Gallery</span>
+  <p>Nenhum prato, produto alimentar ou bebida, incluindo o couvert, pode ser cobrado se não for solicitado pelo cliente ou se for mantido inutilizado.</p>
+  <p>Se é alérgico ou intolerante a alguma das substâncias a seguir discriminadas e tem dúvidas se esta foi utilizada na preparação ou confeção do que pretende consumir, pode solicitar informação a um dos nossos colaboradores:<br>
+  cereais que contêm glúten, crustáceos, ovos, peixe, amendoins, soja, leite, frutos de casca rija, aipo, mostarda, sementes de sésamo, dióxido de enxofre e sulfitos, tremoço, moluscos.</p>
+  <p>Neste estabelecimento existe livro de reclamações.<br>Os preços indicados incluem I.V.A. à taxa legal em vigor.</p>
+</footer>
+
+<script>
+/* ================== DADOS DO CARDÁPIO ==================
+   Para mudar um preço ou nome, edite aqui.
+   Formato do item: ['Nome', preço1, preço2]  (null = não existe nessa medida)
+   d('Nome', preço5cl) calcula automaticamente a garrafa de 70cl (x10) */
+const d=(n,p)=>[n,p,Math.round(p*1000)/100];
+const C5=['Dose 5 cl','Garrafa 70 cl'];
+
+const SECTIONS=[
+{id:'cozinha',t:'Cozinha',cats:[
+ {t:'Snacks',items:[['Tosta',10],['Prego',15],['Pica-Pau (à casa / à Portuguesa)',25]]},
+ {t:'Entradas',items:[['Couvert (Pão / Manteiga)',5],['Gambas (Al Ajillo)',25],['Presunto',20],['Queijo da Serra',15],['Omelete (simples / mista / gambas)',20]]},
+ {t:'Peixe',items:[['Bacalhau à Brás',30],['Garoupa (Cozida / Assada)',30],['Arroz ou Massada · Garoupa e Camarão',30],['Arroz ou Massada · Tamboril e Camarão',30],['Arroz ou Massada · Camarão',25]]},
+ {t:'Carnes',items:[['Bife do Lombo · Grelhado',35],['Bife do Lombo · À Portuguesa',35],['Bife do Lombo · À Gallery',40]]},
+ {t:'Sobremesas',items:[['Ananás',10],['Fruta da época',10],['Mousse de Chocolate',10],['Petit Gâteau com Gelado',15]]}
+]},
+{id:'sem-alcool',t:'Águas, Refrigerantes & Cafetaria',cats:[
+ {t:'Águas / Refrigerantes / Cafetaria',items:[['Água s/ Gás 50 cl',10],['Água c/ Gás 25 cl',10],['Red Bull 25 cl',12.5],['Sumos',10],['Café',10],['Chá',10]]}
+]},
+{id:'cervejas',t:'Cervejas',cats:[
+ {t:'Cervejas',items:[['Heineken 33 cl',10],['Bandida do Pomar 40 cl',15],['Sagres 33 cl',10],['Heineken S/Álcool 33 cl',10],['Sagres Preta 33 cl',10]]}
+]},
+{id:'vinhos',t:'Vinhos',cats:[
+ {t:'Vinhos Tintos',cols:['37,5 cl','75 cl'],items:[['Altano',null,30],['Calabriga',null,60],['Cartuxa',null,50],['Duas Quintas',30,50],['Duque de Viseu - Carvalhais',null,30],['Esporão Reserva',null,40],['Fita Preta',null,40],['Herdade do Peso',null,40],['Monte da Peceguinha',null,30],['Mocho Galego',null,30],['Porta 6',null,30],['Quetzal',null,40],['Quinta da Leda',null,90],['Quinta dos Carvalhais Reserva Dão',null,80],['Quinta do Crasto',null,45],['Vinha do Monte H.P.',null,30],['Vinha Grande',null,40],['Trinca Bolotas',null,40]]},
+ {t:'Vinhos Brancos · Maduros',cols:['37,5 cl','75 cl'],items:[['Cartuxa',null,60],['Cidrô Chardonnay',null,40],['Duas Quintas',null,40],['João Pires',null,25],['Planalto',30,40],['Porta 6',null,25],['Quinta do Crasto',null,30],['Quinta do Carmo',null,40],['Vidigueira',null,25]]},
+ {t:'Vinhos Verdes · Brancos',cols:['75 cl'],items:[['"Alvarinho"',25],['Aveleda "Alvarinho"',25],['Muralhas',25],['Palácio da Breijoeira "Alvarinho"',55]]},
+ {t:'Vinhos Rosé',cols:['75 cl'],items:[['Lambrusco',25]]},
+ {t:'Vinhos do Porto',cols:C5,items:[d('Porto Branco',15),d('Porto Tawny',15),d('Porto 20A',25)]}
+]},
+{id:'espumantes',t:'Cocktails & Champagnes',cats:[
+ {t:'Cocktails / Espumantes',cols:['Dose / 20 cl','75 cl'],items:[['Cocktail Especial Gallery',50,null],['Cocktail de Frutas Naturais',25,null],['Cocktail c/ Álcool',25,null],['Cocktail s/ Álcool',25,null],['Shot',7.5,null],['Chenet Ice',40,150],['Chenet Rosé',40,150]]},
+ {t:'Champagnes',cols:['37,5 cl','75 cl'],items:[['Dom Pérignon "Brut"',null,600],['Moët & Chandon "Brut"',150,290],['Moët & Chandon "Ice"',null,440],['Moët & Chandon "Ice Rosé"',null,440],['Moët & Chandon "Nectar"',null,330],['Moët & Chandon "Rosé"',null,440],['Moët & Chandon "Nectar Rosé" [N.I.R.]',null,440],['Mumm "Cordon Rouge" "Brut"',null,290],['Ruinart "Brut"',null,400],['Taittinger "Brut"',170,290],['Veuve Clicquot "Brut"',180,340]]}
+]},
+{id:'whiskies',t:'Whiskies',cats:[
+ {t:'Whiskies Novos',cols:C5,items:[d("Ballantine's",15),d('Famous Grouse',15),d('Grants',15),d('Johnnie Walker "Red Label"',15),d('Cutty Sark',15),d('William Lawson',15)]},
+ {t:'Whiskies Irish / Americans',cols:C5,items:[d("Bushmill's",15),d('Canadian Club',17.5),d('Four Roses',17.5),d('Jack Daniels',20),d('Jameson',15),d('Jameson Black Barrel',17.5),d('Bushmill\'s "Black Bush"',17.5),d('Jim Beam',17.5),d('Canadian Club 12A',25),d('Jameson 18A',35)]},
+ {t:'Whiskies Velhos',cols:C5,items:[d("Ballantine's 12A",17.5),d('Canadian Club 12A',17.5),d('Chivas Regal 12A',17.5),d('Cutty Sark 12A',17.5),d("Dewar's 12A",17.5),d('Dimple',20),d('Famous Grouse 12A',17.5),d('Glenrothes',30),d('Grants 12A',17.5),d('James Martin 20A',40),d('Johnnie Walker Black',17.5),d('Johnnie Walker Gold',40),d('Johnnie Walker Platinum',30),d('Johnnie Walker Double Black',20),d('Johnnie Walker Swing',35),d('Johnnie Walker Blue Label',60),d('J&B Reserve 15A',17.5),d('Logan',17.5),d('Old Parr',22.5),d("William Lawson's 12A",17.5),d("William Lawson's 18A",30)]},
+ {t:'Whiskies Malt',cols:C5,items:[d('Ballantines',20),d('Balvenie 12A',25),d('Balvenie',20),d('Cardhu 12A',20),d('Glenlivet 12A',20),d('Bushmills 10A',20),d('Glenfiddich 12A',20),d('Glenfiddich 18A',35),d('Glenmorangie 10A',25),d('Glenmorangie 18A',100),d('Johnnie Walker Green',25),d('Macallan 12A',35)]}
+]},
+{id:'destilados',t:'Destilados',cats:[
+ {t:'Vodkas',cols:C5,items:[d('Absolut "Blue"',15),d('Absolut "Elyx"',20),d('Beluga Gold',50),d('Beluga Noble',25),d('Belvedere',20),d('Ciroc',20),d('Eristoff Black',15),d('Grey Goose',22.5),d('Michel Adam',20),['Michel Adam "Magnum"',null,350],['Roberto Cavalli 1 L',null,250],['Roberto Cavalli "Rose Mary" 1 L',null,250],['Roberto Cavalli "Orange" 1 L',null,250],['Roberto Cavalli "Black" 1 L',null,250],['Roberto Cavalli "Gold" 1 L',null,250],d('Smirnoff Red',15)]},
+ {t:'Gins',cols:C5,items:[d('Beefeater Dry',15),d('Berkeley Square',25),d('Black Pig "Costa Alentejana"',15),d('Blimey',25),d('Bloom',15),d('Blue Ribbon',20),d('Bombay Sapphire',15),d('GILT',15),d("Gordon's",15),d("G'Vine Floraison",22.5),d("Grenall's",15),d('Hendricks',22.5),d('London Dry',22.5),d('London Dry Platinum',20),d('Mare',22.5),d("Martin Miller's",20),d('Monkey 47',30),d('Opihr',20),d('Sharish',15),d('Tanqueray Ten',22.5),d('Tanqueray London Dry',15),d('Tanqueray Lime',22),d('Vine',22.5)]},
+ {t:'Rums',cols:C5,items:[d('Bacardi "Carta Branca"',15),d('Bacardi 8A',25),d('Captain Morgan Dark',15),d('Havana Club Añejo 7A',20),d('Zacapa Solera 23 Centenário',30)]},
+ {t:'Tequilas',cols:C5,items:[d('Don Julio',100),d('José Cuervo Reposado',15),d('Olmeca Blanco',15),d('Patrón Silver',22.5)]},
+ {t:'Brandies / Aguardentes / Cognac',cols:C5,items:[d('Constantino',15),d('Palácio da Breijoeira',25),d('CRF Reserva',20),d('Hennessy Cognac',20),d('Hennessy Very Special',30),d('Courvoisier',30),d('Remy Martin VSOP',30),['Remy Martin Extra',null,4000]]},
+ {t:'Vermouths',cols:C5,items:[d('Martini "Bianco"',15),d('Martini "Rosso"',15)]}
+]},
+{id:'licores',t:'Licores',cats:[
+ {t:'Licores',cols:C5,items:['Triple Sec','Absinto','Amaretto Disaronno','Amêndoa Amarga Amarginha','Apérol','Baileys','BOLS Creme de Cassis','Campari','Drambuie','Frangelico','Grand Marnier','Jägermeister','Licor Beirão','Malibu','Ricard','Safari','Tia Maria'].map(n=>d(n,15))}
+]}
+];
+
+/* ================== RENDER ================== */
+const $=s=>document.querySelector(s);
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const fmt=n=>n==null?'—':n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const root=$('#root'),chips=$('#chips');
+
+SECTIONS.forEach(s=>{
+  const sec=document.createElement('section');sec.className='sec';sec.id=s.id;
+  let h=`<h2>${esc(s.t)}</h2>`;
+  s.cats.forEach(c=>{
+    const n=c.cols?c.cols.length:1;
+    h+=`<div class="cat" style="--n:${n}"><h3>${esc(c.t)}</h3>`;
+    if(c.cols)h+=`<div class="cols"><span></span>${c.cols.map(x=>`<span>${x}</span>`).join('')}</div>`;
+    h+='<ul>'+c.items.map(it=>{
+      const prices=it.slice(1);
+      return `<li data-k="${esc(norm(it[0]))}"><span>${esc(it[0])}</span>${prices.map(p=>`<span class="p${p==null?' na':''}">${fmt(p)}</span>`).join('')}</li>`;
+    }).join('')+'</ul></div>';
+  });
+  sec.innerHTML=h;root.appendChild(sec);
+  const a=document.createElement('a');a.href='#'+s.id;a.textContent=s.t.split(' & ')[0].split(',')[0];a.dataset.id=s.id;chips.appendChild(a);
+});
+
+/* aparecer ao rolar */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.08});
+document.querySelectorAll('.cat').forEach(c=>io.observe(c));
+
+/* chip ativo */
+const so=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){
+    chips.querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.dataset.id===e.target.id));
+    const on=chips.querySelector('a.on');if(on)chips.scrollTo({left:on.offsetLeft-20,behavior:'smooth'});
+  }
+}),{rootMargin:'-35% 0px -60% 0px'});
+document.querySelectorAll('.sec').forEach(s=>so.observe(s));
+
+/* pesquisa */
+$('#q').addEventListener('input',e=>{
+  const q=norm(e.target.value.trim());let total=0;
+  document.querySelectorAll('.cat').forEach(c=>{
+    let n=0;
+    c.querySelectorAll('li').forEach(li=>{const ok=!q||li.dataset.k.includes(q)||norm(c.querySelector('h3').textContent).includes(q);li.style.display=ok?'':'none';if(ok)n++});
+    c.style.display=n?'':'none';if(n){c.classList.add('in');total+=n}
+  });
+  document.querySelectorAll('.sec').forEach(s=>{s.style.display=[...s.querySelectorAll('.cat')].some(c=>c.style.display!=='none')?'':'none'});
+  $('#empty').style.display=total?'none':'block';
+});
+
+/* ================== VÍDEO DE FUNDO EM LOOP ================== */
+const v=$('#vid');
+v.muted=true;v.loop=true;
+const play=()=>{const p=v.play();if(p&&p.catch)p.catch(()=>{})};
+play();
+v.addEventListener('error',()=>{$('#novideo').style.display='block'});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)play()});
+['touchstart','pointerdown','keydown','wheel'].forEach(ev=>addEventListener(ev,play,{once:true,passive:true})); // iPhone/modo de poupança
+
+/* ================== INTRO: LOGO GIRANDO (frames) ==================
+   • Parado no topo: a logo gira sozinha em loop infinito + "Deslize".
+   • Ao deslizar: a rotação passa a ser controlada pela rolagem (1 volta completa).
+   • No fim: a intro some e aparece o cardápio sobre o vídeo de fundo.
+
+   >>> PARA AJUSTAR A DURAÇÃO DA INTRO MEXA SÓ NESTES 3 VALORES <<<
+   RANGE  = quantas telas de scroll dura a animação (0.8 = rápido · 1.5 = lento)
+   SPACER = tem de ser igual ao height do #spacer no CSS (170vh = 1.7)
+            regra: SPACER ≈ RANGE * 0.85 + 1   (assim não fica "buraco" entre a intro e o cardápio)
+   SPINS  = voltas completas da logo durante o scroll                                     */
+const RANGE=.56, SPACER=1, SPINS=1;
+
+/* >>> TRANSIÇÃO INTRO → CARDÁPIO (mexa só nestes 3 valores) <<<
+   MENU_START = onde o cardápio começa a aparecer (em telas de scroll; menor = mais cedo)
+   MENU_DUR   = duração do fade-in do cardápio (maior = entrada mais lenta e suave)
+   MENU_RISE  = pixels de "subida extra" (0 = só fade)                                   */
+const MENU_START=.15, MENU_DUR=.6, MENU_RISE=60;
+
+const FRAMES=190;                                   // nº de ficheiros em /frames
+const SRC=i=>`frames/logo_${String(i+1).padStart(3,'0')}.webp`;
+const FPS=30;                                       // velocidade do loop automático
+const LOGO_FRAC=.37;                                // largura da logo dentro do frame (~37%)
+
+const cv=$('#cv'),ctx=cv.getContext('2d'),intro=$('#intro'),hint=$('#hint'),bar=$('#bar');
+const menuEl=$('#menu'),barEl=$('.bar2');
+let lastB=-1;
+/* BAR_START = quando a barra começa a aparecer (telas de scroll) · BAR_DUR = quanto demora a aparecer por completo.
+   A barra encaixa no topo por volta de 1.0 (= SPACER), por isso termina por aí. */
+const BAR_START=.45, BAR_DUR=.5;
+const imgs=new Array(FRAMES);
+let W=0,H=0,dpr=1,lastDrawn=-1;
+
+/* carrega os frames: primeiro 1 em cada 4 (a logo já gira cedo), depois os restantes */
+function load(i){
+  const im=new Image();im.decoding='async';im.src=SRC(i);
+  im.onload=()=>{imgs[i]=im;lastDrawn=-1};
+}
+for(let i=0;i<FRAMES;i+=4)load(i);
+setTimeout(()=>{for(let i=0;i<FRAMES;i++)if(i%4)load(i)},50);
+
+function nearest(i){ // frame carregado mais próximo (evita "piscar" enquanto carrega)
+  for(let k=0;k<FRAMES;k++){
+    const a=imgs[(i-k+FRAMES)%FRAMES];if(a)return a;
+    const b=imgs[(i+k)%FRAMES];if(b)return b;
+  }
+  return null;
+}
+function resize(){
+  dpr=Math.min(devicePixelRatio||1,2);
+  W=innerWidth;H=innerHeight;
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  lastDrawn=-1;
+}
+function draw(i){
+  const im=nearest(i);if(!im)return;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const fw=im.naturalWidth,fh=im.naturalHeight;
+  const cover=Math.max(W/fw,H/fh)*.85;              // desktop: quase tela cheia
+  const fit=.78*W/(LOGO_FRAC*fw);                   // telemóvel: logo ocupa ~78% da largura
+  const s=Math.min(cover,fit)*dpr;
+  const w=fw*s,h=fh*s;
+  ctx.imageSmoothingQuality='high';
+  ctx.drawImage(im,(cv.width-w)/2,(cv.height-h)/2,w,h);
+}
+
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+let cur=0,base=0,t0=performance.now(),progress=0;
+
+function frame(t){
+  const dt=Math.min(.1,(t-t0)/1000);t0=t;
+  progress=clamp(scrollY/(innerHeight*RANGE));
+
+  /* cardápio emerge com o scroll (crossfade com a intro) */
+  const mp=clamp((scrollY-innerHeight*MENU_START)/(innerHeight*MENU_DUR));
+  if(mp>=1||reduce){menuEl.style.opacity='';menuEl.style.transform=''}
+  else{
+    const ease=1-Math.pow(1-mp,3);                  // easing suave
+    menuEl.style.opacity=ease;
+    menuEl.style.transform=`translateY(${(1-ease)*MENU_RISE}px)`;
+  }
+
+  /* barra de pesquisa: aparece suavemente ao encaixar no topo */
+  const bp=reduce?1:clamp((scrollY-innerHeight*BAR_START)/(innerHeight*BAR_DUR));
+  const be=bp*bp*(3-2*bp);                          // smoothstep
+  if(be!==lastB){barEl.style.setProperty('--b',be);lastB=be}
+
+  /* intro já terminou: não gasta CPU a desenhar */
+  const fade=1-clamp((progress-.45)/.4);
+  intro.style.opacity=fade;
+  intro.style.visibility=fade<=0?'hidden':'visible';
+  intro.style.pointerEvents=fade>.5?'auto':'none';
+  if(fade<=0){requestAnimationFrame(frame);return}
+
+  if(scrollY<=2){                                   // topo: loop infinito automático
+    if(!reduce)cur+=dt*FPS;
+    base=cur;
+  }else{                                            // deslizando: a rolagem controla a rotação
+    const target=base+progress*FRAMES*SPINS;
+    cur+=(target-cur)*Math.min(1,dt*14);            // suavização
+  }
+  const idx=((Math.floor(cur)%FRAMES)+FRAMES)%FRAMES;
+  if(idx!==lastDrawn){draw(idx);lastDrawn=idx}
+
+  cv.style.transform=`scale(${1+progress*.12})`;
+  hint.style.opacity=clamp(1-progress*8);
+
+  requestAnimationFrame(frame);
+}
+addEventListener('resize',resize);
+history.scrollRestoration='manual';scrollTo(0,0);
+resize();requestAnimationFrame(frame);
+
+/* abrir o cardápio: toque na intro ou botão "Saltar" */
+const open=()=>scrollTo({top:innerHeight*SPACER,behavior:'smooth'});
+intro.addEventListener('click',open);
+$('#skip').addEventListener('click',e=>{e.stopPropagation();open()});
+
+/* barra de progresso do cardápio */
+addEventListener('scroll',()=>{
+  const total=document.documentElement.scrollHeight-innerHeight;
+  bar.style.width=(total>0?Math.min(100,scrollY/total*100):0)+'%';
+},{passive:true});
+</script>
+</body>
+</html>
